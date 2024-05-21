@@ -8,6 +8,7 @@
 <div class="head">
           <h1>Liste des articles</h1>
 </div>
+
 <?php
 require_once 'controleur/controller.php';
 

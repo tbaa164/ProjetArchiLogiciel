@@ -1,8 +1,8 @@
-<div>
+<div class="navbar">
     <a href="index.php">Accueil</a>
     <?php
     foreach ($categories as $categorie) {
-        echo '<a href="index.php?categorie='.$categorie['id'].'">'.$categorie['libelle'].'</a> ';
+        echo '<a href="index.php?categorie='.$categorie['id'].'">'.$categorie['libelle'].'</a>';
     }
     ?>
 </div>
