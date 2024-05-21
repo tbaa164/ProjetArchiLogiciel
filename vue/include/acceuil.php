@@ -1,3 +1,4 @@
+
 <div class="navbar">
     <a href="index.php">Accueil</a>
     <?php
@@ -5,6 +6,9 @@
         echo '<a href="index.php?categorie='.$categorie['id'].'">'.$categorie['libelle'].'</a>';
     }
     ?>
+</div>
+<div class="blanche">
+         
 </div>
 <div class="articles-container">
     <?php
