@@ -14,5 +14,39 @@ class CategorieDao {
         }
         return $categories;
     }
+
+    public function ajouterCategorie($libelle) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "INSERT INTO Categorie (libelle) VALUES (?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $libelle);
+        $stmt->execute();
+    }
+
+    public function modifierCategorie($id, $libelle) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "UPDATE Categorie SET libelle = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $libelle, $id);
+        $stmt->execute();
+    }
+
+    public function supprimerCategorie($id) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "DELETE FROM Categorie WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+    }
+
+    public function getCategorieById($id) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "SELECT id, libelle FROM Categorie WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
 }
 ?>
