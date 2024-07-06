@@ -16,7 +16,7 @@ class Controller {
 
     public function authenticate($email, $password) {
         $user = $this->utilisateurDao->getUtilisateurByEmail($email);
-        if ($user && $password === $user['password']) { // Comparaison sans hachage
+        if ($user && $password === $user['password']) { // Comparaison bou amoul hashe
             Auth::login($user);
             return true;
         }
@@ -28,47 +28,46 @@ class Controller {
     }
 
     public function logout() {
-        Auth::logout();
-        header('Location: index.php');
+        session_start();
+        session_destroy();
+        header('Location: index.php?action=login');
         exit;
     }
 
     public function displayManageCategories() {
-        $this->checkAdmin(); // Vérifier si l'utilisateur est administrateur
+        $this->checkEditorOrAdmin(); 
         $categories = $this->categorieDao->getAllCategories();
         include 'vue/include/manage_categories.php';
     }
 
-    private function checkAdmin() {
+    private function checkEditorOrAdmin() {
+        $userRole = Auth::getUserRole();
         if (!Auth::isLoggedIn()) {
-            echo "L'utilisateur n'est pas connecté.";
-        } elseif (!Auth::isAdmin()) {
-            echo "L'utilisateur n'est pas administrateur.";
-        } else {
-            echo "L'utilisateur est administrateur.";
+            header('Location: index.php?action=login');
+            exit;
+        } elseif ($userRole !== 'editor' && $userRole !== 'admin') {
+            echo "L'utilisateur n'est pas éditeur ou administrateur.";
+            exit;
         }
+    }
+
+    public function displayAddArticle($categoryId = null) {
+        $this->checkEditor();
+        $categories = $this->categorieDao->getAllCategories();
+        include 'vue/include/add_article.php';
     }
 
     public function displayHome($page = 1) {
         $articlesPerPage = 5;
-        $articleDao = new ArticleDao();
-        $articles = $articleDao->getArticlesByPage($page, $articlesPerPage);
-        $totalArticles = $articleDao->getTotalArticlesCount();
+        $articles = $this->articleDao->getArticlesByPage($page, $articlesPerPage);
+        $totalArticles = $this->articleDao->getTotalArticlesCount();
         $totalPages = ceil($totalArticles / $articlesPerPage);
-    
-        require_once 'vue/include/acceuil.php';
+
+        include 'vue/include/acceuil.php';
     }
 
     public function filterArticlesByCategory($categoryId) {
-        $articleDao = new ArticleDao();
-        $articles = $articleDao->getArticlesByCategory($categoryId);
-    
-        require_once 'vue/include/acceuil.php';
-    }
-
-    public function displayAccueil($page = 1) {
-        $categories = $this->categorieDao->getAllCategories();
-        $articles = $this->articleDao->getArticlesByPage($page);
+        $articles = $this->articleDao->getArticlesByCategory($categoryId);
         include 'vue/include/acceuil.php';
     }
 
@@ -89,17 +88,38 @@ class Controller {
         $contenu = $_POST['contenu'];
         $categorie = $_POST['categorie'];
         $this->articleDao->addArticle($titre, $contenu, $categorie);
-        header('Location: index.php?action=manage_articles');
+        header('Location: index.php?action=filter&category=' . $categorie);
+    }
+
+    public function displayEditArticle($id) {
+        $this->checkEditor(); 
+        $article = $this->articleDao->getArticleById($id);
+        $categories = $this->categorieDao->getAllCategories();
+        include 'vue/include/edit_article.php'; 
+    }
+
+    public function editArticle($id) {
+        $this->checkEditor(); 
+        $titre = $_POST['titre'];
+        $contenu = $_POST['contenu'];
+        $categorie_id = $_POST['categorie'];
+        $this->articleDao->modifierArticle($id, $titre, $contenu, $categorie_id);
+        header('Location: index.php?action=home');
     }
 
     public function deleteArticle($id) {
-        $this->articleDao->deleteArticle($id);
-        $this->displayManageArticles();
+        $this->checkEditor(); 
+        $this->articleDao->supprimerArticle($id);
+        header('Location: index.php?action=home');
     }
 
     private function checkEditor() {
-        if (!Auth::isEditor()) {
+        $userRole = Auth::getUserRole();
+        if (!Auth::isLoggedIn()) {
             header('Location: index.php?action=login');
+            exit;
+        } elseif ($userRole !== 'editor' && $userRole !== 'admin') {
+            echo "L'utilisateur n'est pas éditeur ou administrateur.";
             exit;
         }
     }
@@ -111,19 +131,13 @@ class Controller {
         include 'vue/include/manage_articles.php';
     }
 
-    public function displayAddArticle() {
-        $this->checkEditor();
-        $categories = $this->categorieDao->getAllCategories();
-        include 'vue/include/add_article.php';
-    }
-
     public function addCategory() {
-        $this->checkAdmin();
+        $this->checkEditorOrAdmin(); 
         $libelle = $_POST['libelle'];
         $this->categorieDao->ajouterCategorie($libelle);
         header('Location: index.php?action=manage_categories');
     }
-
+    
     public function displayAddCategory() {
         $this->checkAdmin();
         include 'vue/include/add_category.php';
@@ -147,11 +161,104 @@ class Controller {
         $this->categorieDao->supprimerCategorie($id);
         header('Location: index.php?action=manage_categories');
     }
+
+    public function isLoggedIn() {
+        return Auth::isLoggedIn();
+    }
+
+    public function isAdmin() {
+        $userRole = Auth::getUserRole();
+        return $userRole === 'admin';
+    }
+
+    private function checkAdmin() {
+        $userRole = Auth::getUserRole();
+        if (!Auth::isLoggedIn()) {
+            header('Location: index.php?action=login');
+            exit;
+        } elseif ($userRole !== 'admin') {
+            echo "L'utilisateur n'est pas administrateur.";
+            exit;
+        }
+    }
+
+    public function displayManageUsers() {
+        $this->checkAdmin();
+        $utilisateurs = $this->utilisateurDao->getAllUtilisateurs();
+        include 'vue/include/manage_users.php';
+    }
+
+    public function displayAddUser() {
+        $this->checkAdmin();
+        
+       $nom = '';
+        $prenom = '';
+        $email = '';
+        $role = ''; 
+    
+        include 'vue/include/add_user.php';
+    }
+    
+    public function addUser() {
+        $this->checkAdmin();
+        $nom = $_POST['nom'];
+        $prenom = $_POST['prenom'];
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $role = $_POST['role'];
+        $this->utilisateurDao->ajouterUtilisateur($nom, $prenom, $email, $password, $role);
+        header('Location: index.php?action=manage_users');
+    }
+
+    public function displayEditUser($id) {
+        $this->checkAdmin();
+        $user = $this->utilisateurDao->getUtilisateurById($id);
+
+        if (!$user) {
+            echo "Utilisateur non trouvé.";
+            exit;
+        }
+
+        include 'vue/include/edit_user.php';
+    }
+
+    public function editUser($id) {
+        $this->checkAdmin();
+    
+        // Vérifiez si l'utilisateur existe
+        $user = $this->utilisateurDao->getUtilisateurById($id);
+    
+        if (!$user) {
+            echo "Utilisateur non trouvé.";
+            exit;
+        }
+    
+        // Si le formulaire est soumis, meu modifier l'user
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nom = $_POST['nom'];
+            $prenom = $_POST['prenom'];
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $role = $_POST['role'];
+    
+            // méthode pour modifier l'utilisateur dans UtilisateurDao
+            $this->utilisateurDao->modifierUtilisateur($id, $nom, $prenom, $email, $password, $role);
+    
+            // Redirigez après modification
+            header('Location: index.php?action=manage_users');
+            exit;
+        }
+    
+        // Afficher formulaire de modification avec les détails de l'utilisateur
+        include 'vue/include/edit_user.php';
+    }
+    
+    
+
+    public function deleteUser($id) {
+        $this->checkAdmin();
+        $this->utilisateurDao->supprimerUtilisateur($id);
+        header('Location: index.php?action=manage_users');
+    }
 }
 ?>
-
-
-
-
-
-

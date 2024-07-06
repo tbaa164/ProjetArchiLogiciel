@@ -4,6 +4,5 @@ class Article {
     private $contenu;
     private $categorie;
 
-    // Getters and setters for each property
 }
 ?>

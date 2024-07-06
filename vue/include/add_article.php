@@ -13,7 +13,7 @@
         <label for="categorie">Catégorie :</label>
         <select id="categorie" name="categorie">
             <?php foreach ($categories as $categorie) : ?>
-                <option value="<?= $categorie['id'] ?>"><?= $categorie['libelle'] ?></option>
+                <option value="<?= $categorie['id'] ?>" <?= (isset($categoryId) && $categoryId == $categorie['id']) ? 'selected' : '' ?>><?= $categorie['libelle'] ?></option>
             <?php endforeach; ?>
         </select><br>
         <button type="submit">Ajouter</button>

@@ -78,7 +78,7 @@ class ArticleDao {
         return $result->fetch_assoc();
     }
 
-    public function ajouterArticle($titre, $contenu, $categorie_id) {
+    public function addArticle($titre, $contenu, $categorie_id) {
         $conn = ConnexionManager::getConnexion();
         $sql = "INSERT INTO Article (titre, contenu, categorie) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);

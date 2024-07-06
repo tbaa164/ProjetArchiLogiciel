@@ -1,0 +1,19 @@
+<h2>Gérer les utilisateurs</h2>
+<a href="index.php?action=add_user">Ajouter un utilisateur</a>
+<table>
+    <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+    </tr>
+    <?php foreach ($utilisateurs as $user): ?>
+    <tr>
+        <td><?= htmlspecialchars($user['email']) ?></td>
+        <td><?= htmlspecialchars($user['role']) ?></td>
+        <td>
+            <a href="index.php?action=edit_user&id=<?= $user['id'] ?>">Modifier</a>
+            <a href="index.php?action=delete_user&id=<?= $user['id'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</a>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</table>

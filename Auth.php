@@ -9,6 +9,14 @@ class Auth {
         return self::isLoggedIn() && $_SESSION['user']['role'] === 'admin';
     }
 
+    public static function getUserRole() {
+        return $_SESSION['user']['role'] ?? null;
+    }
+
+    public static function isEditor() {
+        return self::isLoggedIn() && ($_SESSION['user']['role'] === 'editor' || $_SESSION['user']['role'] === 'admin');
+    }
+
     public static function login($user) {
         $_SESSION['user'] = $user;
     }

@@ -1,4 +1,14 @@
 <?php
+
+session_set_cookie_params([
+    'lifetime' => 0,  // expire lorsque le navigateur est fermé
+    'path' => '/',
+    'domain' => '',
+    'secure' => false,
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+
 session_start();
 require_once 'controleur/Controller.php';
 require_once 'Auth.php';
@@ -34,7 +44,8 @@ switch ($action) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->addArticle();
         } else {
-            $controller->displayAddArticle();
+            $categoryId = isset($_GET['category']) ? (int)$_GET['category'] : null;
+            $controller->displayAddArticle($categoryId);
         }
         break;
     case 'edit_article':
@@ -89,8 +100,36 @@ switch ($action) {
     case 'logout':
         $controller->logout();
         break;
+    case 'manage_users':
+        $controller->displayManageUsers();
+        break;
+    case 'add_user':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->addUser();
+        } else {
+            $controller->displayAddUser();
+        }
+        break;
+        case 'edit_user':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->editUser($id); // Assurez-vous que $id est passé à la méthode editUser()
+            } else {
+                $controller->displayEditUser($id); // Assurez-vous que $id est passé à la méthode displayEditUser()
+            }
+            break;
+    case 'delete_user':
+        if (isset($_GET['id'])) {
+            $controller->deleteUser($id);
+        }
+        break;
     default:
         $controller->displayHome($page);
         break;
+}
+
+// Si l'utilisateur n'est pas connecté et qu'il ne tente pas de se connecter, rediriger vers la page de connexion
+if ($action !== 'login' && !$controller->isLoggedIn()) {
+    header('Location: index.php?action=login');
+    exit;
 }
 ?>

@@ -8,7 +8,7 @@ class UtilisateurDao {
         $result = $conn->query($sql);
         $utilisateurs = [];
         if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
+            while ($row = $result->fetch_assoc()) {
                 $utilisateurs[] = $row;
             }
         }
@@ -23,6 +23,7 @@ class UtilisateurDao {
         $stmt->execute();
     }
     
+
     public function getUtilisateurByEmail($email) {
         $conn = ConnexionManager::getConnexion();
         $sql = "SELECT * FROM Utilisateur WHERE email = ?";
@@ -32,8 +33,32 @@ class UtilisateurDao {
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
+
+    public function getUtilisateurById($id) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "SELECT * FROM Utilisateur WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function modifierUtilisateur($id, $nom, $prenom, $email, $password, $role) {
+        $conn = ConnexionManager::getConnexion();
+        $query = "UPDATE Utilisateur SET nom = ?, prenom = ?, email = ?, password = ?, role = ? WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("sssssi", $nom, $prenom, $email, $password, $role, $id);
+        $stmt->execute();
+    }
     
-    // public function modifierUtilisateur($id, $nom, $prenom, $email, $password, $role) {
-    //     $conn = ConnexionManager::getConnexion();
-    //     $sql = "UPDATE Utilisateur
+
+    public function supprimerUtilisateur($id) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "DELETE FROM Utilisateur WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+    }
 }
+?>
