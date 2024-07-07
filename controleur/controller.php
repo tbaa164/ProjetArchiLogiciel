@@ -2,25 +2,53 @@
 require_once 'modele/dao/ArticleDao.php';
 require_once 'modele/dao/CategorieDao.php';
 require_once 'modele/dao/UtilisateurDao.php';
+require_once 'JWT/JwtManager.php';
 
 class Controller {
     private $articleDao;
     private $categorieDao;
     private $utilisateurDao;
+    private $jwtManager;
 
     public function __construct() {
         $this->articleDao = new ArticleDao();
         $this->categorieDao = new CategorieDao();
         $this->utilisateurDao = new UtilisateurDao();
+        $this->jwtManager = new JwtManager('b8e1f59c6e774a0c91f9d4b8a6d7e4a29cf9d4c4e8e7c6b1a8d9f9d2f8c9e2b4');
     }
+
+
+    // public function authenticate($email, $password) {
+    //     $user = $this->utilisateurDao->getUtilisateurByEmail($email);
+    
+    //     // Vérifiez si l'utilisateur existe et si le mot de passe correspond
+    //     if ($user && $password === $user['password']) {
+    //         // Authentification réussie, définir la session
+    //         Auth::login($user);
+    //         return true;
+    //     }
+    
+    //     return false;
+    // }
 
     public function authenticate($email, $password) {
         $user = $this->utilisateurDao->getUtilisateurByEmail($email);
-        if ($user && $password === $user['password']) { // Comparaison bou amoul hashe
-            Auth::login($user);
-            return true;
+
+        if ($user && $password === $user['password']) {
+            $payload = [
+                "id" => $user['id'],
+                "email" => $user['email'],
+                "role" => $user['role'],
+                "exp" => time() + 3600
+            ];
+            $jwt = $this->jwtManager->createToken($payload);
+            $_SESSION['jwt'] = $jwt;
+
+            header('Location: index.php?action=home');
+            exit;
         }
-        return false;
+
+        return "Adresse email ou mot de passe incorrect.";
     }
 
     public function displayLogin() {
@@ -172,15 +200,12 @@ class Controller {
     }
 
     private function checkAdmin() {
-        $userRole = Auth::getUserRole();
-        if (!Auth::isLoggedIn()) {
+        if (!Auth::isAdmin()) {
             header('Location: index.php?action=login');
-            exit;
-        } elseif ($userRole !== 'admin') {
-            echo "L'utilisateur n'est pas administrateur.";
             exit;
         }
     }
+    
 
     public function displayManageUsers() {
         $this->checkAdmin();

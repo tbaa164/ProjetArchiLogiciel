@@ -1,0 +1,17 @@
+{
+    "name": "vendor/token",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Token\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "tbaa164",
+            "email": "tallaba232@gmail.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.8"
+    }
+}

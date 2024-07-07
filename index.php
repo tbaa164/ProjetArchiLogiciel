@@ -1,4 +1,5 @@
 <?php
+require 'vendor/autoload.php';
 
 session_set_cookie_params([
     'lifetime' => 0,  // expire lorsque le navigateur est fermé
@@ -10,7 +11,7 @@ session_set_cookie_params([
 ]);
 
 session_start();
-require_once 'controleur/Controller.php';
+require_once 'controleur/controller.php';
 require_once 'Auth.php';
 
 $controller = new Controller();
