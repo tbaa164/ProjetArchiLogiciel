@@ -6,7 +6,7 @@ class ConnexionManager {
         if (self::$connexion === null) {
             $servername = "localhost";
             $username = "root";
-            $password = "";
+            $password = "passer";
             $dbname = "mglsi_news";
             self::$connexion = new mysqli($servername, $username, $password, $dbname);
             if (self::$connexion->connect_error) {
