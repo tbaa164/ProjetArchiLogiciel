@@ -306,11 +306,24 @@ class Controller {
     
     public function addToken($userId) {
         $this->checkAdmin();
-        $token = bin2hex(random_bytes(64)); // Génère un token aléatoire
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Définit une expiration à 1 heure
-        $this->jetonDao->ajouterJeton($userId, $token, $expiresAt);
+    
+        // Generate a JWT token
+        $jwtManager = new JwtManager("b8e1f59c6e774a0c91f9d4b8a6d7e4a29cf9d4c4e8e7c6b1a8d9f9d2f8c9e2b4");
+        $payload = array(
+            'user_id' => $userId,
+            'expires_at' => strtotime('+1 hour')  // Expiration à 1 heure
+            // You can add more data as needed in the payload
+        );
+        $token = $jwtManager->createToken($payload);
+    
+        // Store the token and expiration in your database or token management system
+        // Example assuming you have a method ajouterJeton($userId, $token, $expiresAt)
+        $this->jetonDao->ajouterJeton($userId, $token, date('Y-m-d H:i:s', $payload['expires_at']));
+    
+        // Redirect or handle as needed
         header('Location: index.php?action=manage_users');
     }
+    
 
     public function deleteToken($userId, $token) {
         $this->utilisateurDao->supprimerJeton($userId, $token);
