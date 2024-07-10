@@ -2,6 +2,27 @@
 require_once 'ConnexionManager.php';
 
 class UtilisateurDao {
+
+
+    public function ajouterJeton($utilisateurId, $jeton, $expiresAt) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "INSERT INTO Jeton (utilisateur_id, token, expires_at) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iss", $utilisateurId, $jeton, $expiresAt);
+        $stmt->execute();
+    }
+    
+    
+    public function supprimerJeton($utilisateurId, $jeton) {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "DELETE FROM Jeton WHERE utilisateur_id = ? AND token = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $utilisateurId, $jeton);
+        $stmt->execute();
+    }
+    
+        
+
     public function getAllUtilisateurs() {
         $conn = ConnexionManager::getConnexion();
         $sql = "SELECT id, nom, prenom, email, role FROM Utilisateur";
@@ -60,5 +81,38 @@ class UtilisateurDao {
         $stmt->bind_param("i", $id);
         $stmt->execute();
     }
+
+    public function getUtilisateurWithTokens() {
+        $conn = ConnexionManager::getConnexion();
+        $sql = "SELECT u.*, j.token, j.expires_at FROM Utilisateur u LEFT JOIN Jeton j ON u.id = j.utilisateur_id";
+        $result = $conn->query($sql);
+        $utilisateurs = [];
+    
+        while ($row = $result->fetch_assoc()) {
+            // Si aucun utilisateur n'est présent, on l'ajoute au tableau
+            if (!isset($utilisateurs[$row['id']])) {
+                $utilisateurs[$row['id']] = [
+                    'id' => $row['id'],
+                    'email' => $row['email'],
+                    'password' => $row['password'],
+                    'role' => $row['role'],
+                    'tokens' => []
+                ];
+            }
+    
+            // Ajout du jeton s'il existe
+            if ($row['token'] !== null) {
+                $utilisateurs[$row['id']]['tokens'][] = [
+                    'token' => $row['token'],
+                    'expires_at' => $row['expires_at']
+                ];
+            }
+        }
+    
+        // Convertir le tableau associatif en un tableau simple d'utilisateurs
+        return array_values($utilisateurs);
+    }
+    
+    
 }
 ?>

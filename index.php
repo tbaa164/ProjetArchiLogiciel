@@ -113,9 +113,9 @@ switch ($action) {
         break;
         case 'edit_user':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->editUser($id); // Assurez-vous que $id est passé à la méthode editUser()
+                $controller->editUser($id); //  $id est passé à la méthode editUser()
             } else {
-                $controller->displayEditUser($id); // Assurez-vous que $id est passé à la méthode displayEditUser()
+                $controller->displayEditUser($id); //  $id est passé à la méthode displayEditUser()
             }
             break;
     case 'delete_user':
@@ -123,6 +123,25 @@ switch ($action) {
             $controller->deleteUser($id);
         }
         break;
+    case 'add_token':
+                if (isset($id)) {
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->addToken($id);
+                    } else {
+                        $controller->displayAddToken($id);
+                    }
+                }
+                break;
+                
+    case 'delete_token':
+    $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+    $token = isset($_GET['token']) ? $_GET['token'] : null;
+    if ($userId && $token) {
+        $controller->deleteToken($userId, $token);
+    }
+    break;
+               
+                
     default:
         $controller->displayHome($page);
         break;

@@ -2,6 +2,7 @@
 require_once 'modele/dao/ArticleDao.php';
 require_once 'modele/dao/CategorieDao.php';
 require_once 'modele/dao/UtilisateurDao.php';
+require_once 'modele/dao/JetonDao.php';
 require_once 'JWT/JwtManager.php';
 
 class Controller {
@@ -9,12 +10,14 @@ class Controller {
     private $categorieDao;
     private $utilisateurDao;
     private $jwtManager;
+    private $jetonDao;
 
     public function __construct() {
         $this->articleDao = new ArticleDao();
         $this->categorieDao = new CategorieDao();
         $this->utilisateurDao = new UtilisateurDao();
         $this->jwtManager = new JwtManager('b8e1f59c6e774a0c91f9d4b8a6d7e4a29cf9d4c4e8e7c6b1a8d9f9d2f8c9e2b4');
+        $this->jetonDao = new JetonDao();
     }
 
 
@@ -33,34 +36,42 @@ class Controller {
 
     public function authenticate($email, $password) {
         $user = $this->utilisateurDao->getUtilisateurByEmail($email);
-
+    
         if ($user && $password === $user['password']) {
             $payload = [
                 "id" => $user['id'],
                 "email" => $user['email'],
                 "role" => $user['role'],
-                "exp" => time() + 3600
+                "exp" => time() + 3600  // Exemple: jeton valide pendant 1 heure
             ];
             $jwt = $this->jwtManager->createToken($payload);
+            $this->jetonDao->ajouterJeton($user['id'], $jwt, date('Y-m-d H:i:s', $payload['exp']));
             $_SESSION['jwt'] = $jwt;
-
+    
             header('Location: index.php?action=home');
             exit;
         }
-
+    
         return "Adresse email ou mot de passe incorrect.";
     }
+    
+    public function logout() {
+        session_start();
+        $user = $this->utilisateurDao->getUtilisateurByEmail($_SESSION['email']); // Remplacez par votre méthode de récupération d'utilisateur par email
+        if ($user) {
+            $this->utilisateurDao->supprimerJeton($user['id']);
+        }
+        session_destroy();
+        header('Location: index.php?action=login');
+        exit;
+    }
+    
 
     public function displayLogin() {
         include 'vue/include/login.php';
     }
 
-    public function logout() {
-        session_start();
-        session_destroy();
-        header('Location: index.php?action=login');
-        exit;
-    }
+    
 
     public function displayManageCategories() {
         $this->checkEditorOrAdmin(); 
@@ -209,7 +220,7 @@ class Controller {
 
     public function displayManageUsers() {
         $this->checkAdmin();
-        $utilisateurs = $this->utilisateurDao->getAllUtilisateurs();
+        $utilisateurs = $this->utilisateurDao->getUtilisateurWithTokens();
         include 'vue/include/manage_users.php';
     }
 
@@ -285,5 +296,32 @@ class Controller {
         $this->utilisateurDao->supprimerUtilisateur($id);
         header('Location: index.php?action=manage_users');
     }
+   
+    
+    public function displayAddToken($userId) {
+        $this->checkAdmin();
+        $user = $this->utilisateurDao->getUtilisateurById($userId);
+        include 'vue/include/add_token.php';
+    }
+    
+    public function addToken($userId) {
+        $this->checkAdmin();
+        $token = bin2hex(random_bytes(64)); // Génère un token aléatoire
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Définit une expiration à 1 heure
+        $this->jetonDao->ajouterJeton($userId, $token, $expiresAt);
+        header('Location: index.php?action=manage_users');
+    }
+
+    public function deleteToken($userId, $token) {
+        $this->utilisateurDao->supprimerJeton($userId, $token);
+        header('Location: index.php?action=manage_users');
+        exit;
+    }
+    
+    
+  
+    
+    
+ 
 }
 ?>
